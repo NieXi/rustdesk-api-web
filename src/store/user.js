@@ -2,6 +2,7 @@ import { defineStore, acceptHMRUpdate } from 'pinia'
 import { current, login } from '@/api/user'
 import { setToken, removeToken, setCode, removeCode } from '@/utils/auth'
 import { useRouteStore } from '@/store/router'
+import { useTagsStore } from '@/store/tags'
 import { useAppStore } from '@/store/app'
 import { oidcAuth, oidcQuery } from '@/api/login'
 
@@ -21,9 +22,18 @@ export const useUserStore = defineStore({
     logout () {
       removeToken()
       removeCode()
+      // 原来只 patch 了 state 里不存在的 name/role，route_names 和 token 都没清：
+      // 不刷新换号时 permission 守卫见 route_names 非空就跳过 info()，新账号的路由永远加不上。
+      useRouteStore().resetRoutes()
+      useTagsStore().$reset()
       this.$patch({
-        name: '',
-        role: {},
+        nickname: '',
+        username: '',
+        email: '',
+        token: '',
+        role: '',
+        avatar: '',
+        route_names: [],
       })
     },
 

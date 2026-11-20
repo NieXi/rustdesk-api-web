@@ -83,11 +83,26 @@
 
   const captchaCode = ref('')
   const redirect = route.query?.redirect
+  // 登录后别盲目跳 redirect：它可能是上一个账号（admin）留下的页面，
+  // 比如退出时停在 /user/index，redirect=/user/index，普通账号根本没这条路由，
+  // router.push 过去只会命中 catch-all 跳 404。校验不通过就回首页 '/'（MyInfo，普通账号也有）。
+  const getSafeRedirect = () => {
+    if (!redirect || redirect === '/404' || redirect === '/login' || redirect === '/register') {
+      return '/'
+    }
+    const resolved = router.resolve(redirect)
+    const matched = resolved.matched
+    // 只命中 catch-all 说明这条路当前账号没有
+    if (!matched.length || matched[matched.length - 1].path === '/:catchAll(.*)') {
+      return '/'
+    }
+    return redirect
+  }
   const login = async () => {
     const res = await userStore.login(form).catch(e => e)
     if (!res.code) {
       ElMessage.success(T('LoginSuccess'))
-      router.push({ path: redirect || '/', replace: true })
+      router.push({ path: getSafeRedirect(), replace: true })
       return
     }
     if (res.code === 110) {
@@ -155,7 +170,7 @@
         // 删除code，确保跳转之前对code进行清楚
         removeCode()
         ElMessage.success(T('LoginSuccess'))
-        router.push({ path: redirect || '/', replace: true })
+        router.push({ path: getSafeRedirect(), replace: true })
       }
     } else {
       // 如果code不存在, 现实登陆页面

@@ -38,6 +38,17 @@ router.beforeEach(async (to, from, next) => {
       if (!info) {
         userStore.logout()
         next(`/login?redirect=${to.path}`)
+      } else if (to.path !== '/404') {
+        // 刚按当前账号权限加完路由，目标页可能根本不在该账号的路由表里
+        // （比如刷新停在 admin 的 /user/index 上再以普通账号进），直接 next({...to})
+        // 只会命中 catch-all 跳 404，改回首页。
+        const resolved = router.resolve(to.fullPath)
+        const matched = resolved.matched
+        if (!matched.length || matched[matched.length - 1].path === '/:catchAll(.*)') {
+          next({ path: '/', replace: true })
+        } else {
+          next({ ...to, replace: true })
+        }
       } else {
         next({ ...to, replace: true })
       }

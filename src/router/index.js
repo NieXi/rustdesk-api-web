@@ -206,7 +206,8 @@ export const asyncRoutes = [
   },
 ]
 export const lastRoutes = [
-  { path: '/:catchAll(.*)', redirect: '/404', meta: { hide: true } },
+  // 命名 catch-all，切换账号时 resetRoutes 才能把它删掉，否则每次 addRoutes 都会重复注册一条
+  { path: '/:catchAll(.*)', name: 'CatchAll', redirect: '/404', meta: { hide: true } },
 ]
 
 export const router = createRouter({
