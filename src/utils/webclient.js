@@ -1,6 +1,6 @@
-import Websock from '@/utils/webclient/websock'
-import * as rendezvous from '@/utils/webclient/rendezvous'
-import * as message from '@/utils/webclient/message'
+// 注意：protobuf（websock / rendezvous / message，约 8k 行）不在这里静态 import，
+// 只有真正调用 getPeerSlat 时才动态加载，不进首屏包。
+// toWebClientLink / getV2ShareUrl 是轻量函数，只拼链接。
 import { ElMessageBox } from 'element-plus'
 import { T } from '@/utils/i18n'
 import { useAppStore } from '@/store/app'
@@ -16,6 +16,11 @@ export const toWebClientLink = (row) => {
 }
 
 export async function getPeerSlat (id) {
+  const [{ default: Websock }, rendezvous, message] = await Promise.all([
+    import('@/utils/webclient/websock'),
+    import('@/utils/webclient/rendezvous'),
+    import('@/utils/webclient/message'),
+  ])
   const [addr, port] = app.setting.rustdeskConfig.id_server.split(':')
   if (!addr) {
     return

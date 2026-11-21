@@ -19,6 +19,9 @@ let alias = {
 const conf = {
   base: './', // index.html文件所在位置
   root: './', // js导入的资源路径，src
+  // 生产构建去掉 console / debugger（31 处 console.log 不进线上包）
+  // 注意：esbuild 选项在顶层才生效，放在 build 里面会被忽略
+  esbuild: { drop: ['console', 'debugger'] },
   server: {
     open: true,
     port: process.env.VITE_DEV_PORT,
